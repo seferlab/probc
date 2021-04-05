@@ -1,0 +1,149 @@
+# Experiment settings for reproducing Sefer (2022) "ProbC", BMC Genomics 23:287.
+# Values marked (paper) are taken from the article; everything else is an
+# implementation choice documented in README.md ("Implementation notes").
+
+seed: 0
+datasets_config: configs/datasets.yaml
+primary: hESC                       # human ES cells are the main dataset in the paper
+
+# Chromosomes used for real data (null -> per-dataset list in datasets.yaml)
+chromosomes: null
+
+# Which restriction-site pairs are modelled. The paper's likelihood runs over all
+# pairs; a finite max_dist (bp) restricts the universe to the commonly used
+# intra-chromosomal range. Set max_dist: null for all intra-chromosomal pairs.
+universe:
+  scope: intra
+  min_dist: 1
+  max_dist: 2000000
+
+# Negative (non-interacting) pairs used for CV / AUC.
+negatives:
+  ratio: 1.0                        # negatives per positive
+  strategy: uniform                 # uniform | distance_matched
+
+cv:                                 # (paper) fivefold nested CV, fourfold inner
+  outer_folds: 5
+  inner_folds: 4
+  criterion: auc                    # auc | nll
+
+grid:                               # hyper-parameter grid for the inner CV
+  lambda_nuc: [1.0e-4, 1.0e-3, 1.0e-2]
+  lambda_l1: [1.0e-4, 1.0e-3, 1.0e-2]
+
+model:
+  likelihood: bernoulli             # unbinned (paper default)
+  loss_scale: mean                  # NLL divided by #modelled pairs
+  max_iter: 300
+  inner_solver: lbfgsb              # lbfgsb | pgd (Armijo backtracking)
+  rho: 1.0
+  adaptive_rho: true
+
+genome_wide:                        # fixed lambdas for genome-/chromosome-wide fits
+  lambda_nuc: 1.0e-3
+  lambda_l1: 1.0e-3
+  select_lambda: true               # pick lambdas with inner CV before refitting
+
+mark_selection:
+  lambda_l1: 1.0e-2
+  active_rel_tol: 0.1               # a mark is "in the solution" if max_n x_mn >= 10% of max
+  support: full
+  coverage_max_marks: 16
+  top_k: 5
+
+heatmaps:
+  compare_with: IMR90
+  top_k: 5
+
+prediction:
+  use_top_marks: true
+  marks: [H3K27ac, H3K9me3, H3K4me3, H3K4me1, CTCF]   # (paper) the 5 predictive marks
+  distance_betas: [1.0, 1.5, 2.0]                     # (paper) Fig. 8
+  matrix_resolution: 10000                            # (paper) Fig. 6, 10 kb
+  matrix_chromosome: chr1                             # (paper)
+  roc_chromosome: chr1                                # (paper) Fig. 8
+  venn_chromosome: chr4                               # (paper) Fig. 5
+  matrix_max_bins: 400
+  hicreg:
+    n_estimators: 100
+    min_samples_leaf: 5
+
+domains:
+  tad_method: dp                    # dp (built-in Armatus objective) | armatus (binary)
+  gamma: 0.5
+  nvi_resolutions: [10000, 40000]   # (paper) Fig. 9
+  compartment_resolution: 1000      # (paper) "in 1 kb resolution"
+  table3_resolutions: [1000, 5000, 40000, 100000]     # (paper) Table 3
+  boundary_tolerance: 0
+  max_domain_bp: 2000000
+  distance_beta: null               # optional distance prior on predicted maps (extension)
+
+perturbation:
+  gamma: 0.5
+  ctcf_masking:                     # Despang et al. 2019, Sox9-Kcnj2 (mouse)
+    train: hESC                     # (paper) trained on human ES ...
+    target: mESC                    # ... predicted on mouse ES
+    marks: [CTCF]
+    resolution: 10000
+    # Coordinates must match the assembly of the mESC data (mm10 here). They are
+    # approximate gene positions; please verify against your annotation.
+    chrom: chr11
+    window: [110500000, 113500000]
+    anchors: {Kcnj2: 111070000, Sox9: 112782000}
+    boundary_region: [111990000, 112005000]   # 15 kb boundary with 4 CTCF sites (verify)
+    between_region: [111080000, 112780000]
+  deletion:                         # Yang et al. 2020, 13q12.2 / FLT3
+    dataset: hESC
+    resolution: 5000
+    chrom: chr13
+    # (paper) coordinates as printed in the article; they are hg19 positions
+    # (Yang et al. 2020). Lift over if your data are on hg38.
+    DS1: [28100363, 28100863]       # FLT3 promoter
+    DS2: [28135863, 28140863]
+    DS3: [28268863, 28269363]       # PAN3 intron
+    window: [27800000, 28600000]
+
+transfer:
+  marks: [H3K27ac, H3K9me3, H3K4me3, H3K4me1, CTCF]
+  pairs:
+    - [mESC, hESC, fig10a_human_from_mouse]
+    - [hESC, mESC, fig10b_mouse_from_human]
+    - [IMR90, hESC, fig11_hESC_from_IMR90]
+    - [hESC, IMR90, fig11b_IMR90_from_hESC]
+
+robustness:
+  lambda_l1: [0, 1.0e-4, 1.0e-3, 1.0e-2, 3.0e-2, 1.0e-1]
+  lambda_nuc: [0, 1.0e-4, 1.0e-3, 1.0e-2, 3.0e-2, 1.0e-1]
+  active_rel_tol: 0.1
+
+stability:
+  replicates: [IMR90, IMR90_HindIII]        # (paper) MboI vs HindIII
+  dataset: IMR90
+  resolutions: [5000, 50000, 250000]        # (paper)
+  binned_likelihood: poisson                # (paper) binned variant, Eq. 19
+
+# ---------------------------------------------------------------------------------
+# Settings applied on top of the above when running with --synthetic.
+synthetic_overrides:
+  grid:
+    lambda_nuc: [1.0e-4, 1.0e-3]
+    lambda_l1: [1.0e-4, 1.0e-3]
+  prediction:
+    venn_chromosome: chr2
+    matrix_max_bins: 300
+  domains:
+    nvi_resolutions: [5000, 20000]
+    compartment_resolution: 10000
+    table3_resolutions: [2000, 5000, 10000, 20000]
+    max_domain_bp: 400000
+  perturbation:
+    ctcf_masking: {resolution: 5000}
+    deletion: {resolution: 5000}
+  stability:
+    resolutions: [2000, 10000, 40000]
+  synthetic:
+    n_chroms: 4
+    sites_per_chrom: 1500
+    mean_gap: 1000
+    window_sites: 150
+    theta_scale: 0.08

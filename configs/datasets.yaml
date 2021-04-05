@@ -1,0 +1,115 @@
+# Raw data sources for the three datasets of the paper (Table 1).
+#
+# Paths are relative to data_root. `probc download` fetches genomes and chromosome
+# sizes from UCSC, peak files through the ENCODE REST API (which also serves the
+# Roadmap Epigenomics reference epigenomes), and Hi-C files when a URL / GEO file is
+# given. Hi-C inputs can be read-level pairs (4DN .pairs or Juicer merged_nodups;
+# needed for the unbinned restriction-site graph), Juicer .hic, or .cool/.mcool.
+#
+# NOTE: Accessions / file names below are the published sources cited in the paper;
+# exact supplementary file names change over time, so check each `geo_file` (or set
+# `url`/`path` to a local copy) before downloading. Fields marked VERIFY need checking.
+
+data_root: data
+
+datasets:
+  hESC:
+    species: human
+    assembly: hg38
+    encode_assembly: GRCh38
+    biosample: H1                     # ENCODE biosample term name for H1 hESC
+    genome_fasta: genome/hg38.fa.gz
+    chrom_sizes: genome/hg38.chrom.sizes
+    restriction_sites: genome/hg38_HindIII.txt   # Juicer site file; computed from FASTA if absent
+    chromosomes: [chr1, chr2, chr3, chr4, chr5, chr6, chr7, chr8, chr9, chr10, chr11, chr12,
+                  chr13, chr14, chr15, chr16, chr17, chr18, chr19, chr20, chr21, chr22, chrX]
+    hic:
+      source: "Schmitt et al. 2016, Cell Rep (GEO GSE87112)"
+      geo: GSE87112
+      geo_file: null                  # VERIFY: H1 file name in the GSE87112 supplement
+      url: null
+      format: merged_nodups           # pairs | merged_nodups | hic | cool
+      path: hic/hESC/merged_nodups.txt.gz
+      enzyme: HindIII                 # VERIFY for the H1 library used
+      min_mapq: 30
+    histone: [H3K4me1, H3K4me3, H3K9me3, H3K27ac, H3K79me2, H3K36me3, H4K20me1, H3K27me3,
+              H3K56ac, H3K23ac, H2AK5ac, H2AFZ, H3K9ac, H3K4me2, H4K8ac, H3K18ac]
+    tf: [CTCF, SMC3, MAFK, CHD1, POLR2A, RAD21, CEBPB, MAZ, FOS, USF2, RCOR1, RFX5, ELK1, MXI1, NFE2L2]
+    dnase: true
+    # Optional explicit peak URLs that override the ENCODE search, e.g.
+    # peak_files: {H3K56ac: https://.../E003-H3K56ac.narrowPeak.gz}
+    peak_files: {}
+
+  IMR90:
+    species: human
+    assembly: hg38
+    encode_assembly: GRCh38
+    biosample: IMR-90
+    genome_fasta: genome/hg38.fa.gz
+    chrom_sizes: genome/hg38.chrom.sizes
+    restriction_sites: genome/hg38_MboI.txt
+    chromosomes: [chr1, chr2, chr3, chr4, chr5, chr6, chr7, chr8, chr9, chr10, chr11, chr12,
+                  chr13, chr14, chr15, chr16, chr17, chr18, chr19, chr20, chr21, chr22, chrX]
+    hic:
+      source: "Rao et al. 2014, Cell (GEO GSE63525), in situ Hi-C, MboI"
+      geo: GSE63525
+      geo_file: null                  # VERIFY: e.g. the IMR90 merged_nodups / .hic file
+      url: null
+      format: merged_nodups
+      path: hic/IMR90/merged_nodups.txt.gz
+      enzyme: MboI
+      min_mapq: 30
+    histone: [H3K4me1, H3K4me3, H3K9me3, H3K27ac, H3K79me2, H3K36me3, H4K20me1, H3K27me3,
+              H3K56ac, H3K23ac, H2AK5ac, H2AFZ, H3K9ac, H3K4me2, H4K8ac, H3K18ac]
+    tf: [CTCF, SMC3, MAFK, CHD1, POLR2A, RAD21, CEBPB, MAZ, FOS, USF2, RCOR1, RFX5, ELK1, MXI1, NFE2L2]
+    dnase: true
+    peak_files: {}
+
+  IMR90_HindIII:                      # enzyme replicate for Fig. 13a
+    species: human
+    assembly: hg38
+    encode_assembly: GRCh38
+    biosample: IMR-90
+    genome_fasta: genome/hg38.fa.gz
+    chrom_sizes: genome/hg38.chrom.sizes
+    restriction_sites: genome/hg38_HindIII.txt
+    chromosomes: [chr1, chr2, chr3, chr4, chr5, chr6, chr7, chr8, chr9, chr10, chr11, chr12,
+                  chr13, chr14, chr15, chr16, chr17, chr18, chr19, chr20, chr21, chr22, chrX]
+    hic:
+      source: "Dixon et al. 2012, Nature (GEO GSE35156), HindIII"   # VERIFY which replicate the paper used
+      geo: GSE35156
+      geo_file: null
+      url: null
+      format: merged_nodups
+      path: hic/IMR90_HindIII/merged_nodups.txt.gz
+      enzyme: HindIII
+      min_mapq: 30
+    histone: [H3K4me1, H3K4me3, H3K9me3, H3K27ac, H3K79me2, H3K36me3, H4K20me1, H3K27me3,
+              H3K56ac, H3K23ac, H2AK5ac, H2AFZ, H3K9ac, H3K4me2, H4K8ac, H3K18ac]
+    tf: []
+    dnase: false
+    peak_files: {}
+
+  mESC:
+    species: mouse
+    assembly: mm10
+    encode_assembly: mm10
+    biosample: ES-Bruce4              # VERIFY: ENCODE mouse ES line with the most marks (ES-Bruce4 / ES-E14)
+    genome_fasta: genome/mm10.fa.gz
+    chrom_sizes: genome/mm10.chrom.sizes
+    chromosomes: [chr1, chr2, chr3, chr4, chr5, chr6, chr7, chr8, chr9, chr10, chr11, chr12,
+                  chr13, chr14, chr15, chr16, chr17, chr18, chr19, chrX]
+    nodes:                            # Micro-C has no restriction sites: nucleosome-scale bins
+      type: fixed_bins
+      size: 200
+    hic:
+      source: "Micro-C, mouse ES (Hsieh et al. 2020, Mol Cell; GEO GSE130275); paper cites [7]"
+      geo: GSE130275
+      geo_file: null                  # VERIFY: .mcool or pairs file name
+      url: null
+      format: cool
+      path: hic/mESC/microc.mcool
+    histone: [H3K4me3, H3K27ac, H3K36me3, H3K4me1, H3K9me3, H3K27me3, H3K9ac]
+    tf: [CTCF, POLR2A, EP300, MAFK, CHD2, HCFC1, ZC3H11A, ZNF384]
+    dnase: false
+    peak_files: {}

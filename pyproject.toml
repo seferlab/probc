@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "probc"
+version = "1.0.0"
+description = "ProbC: joint modeling of epigenome and transcriptome effects in 3D genome (Sefer 2022, BMC Genomics) - reimplementation"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [{name = "Emre Sefer"}]
+dependencies = [
+    "numpy>=1.22",
+    "scipy>=1.8",
+    "pandas>=1.4",
+    "scikit-learn>=1.1",
+    "matplotlib>=3.5",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+io = ["cooler>=0.9", "hic-straw>=1.3", "pyBigWig>=0.3"]
+shap = ["shap>=0.41"]
+dev = ["pytest>=7", "ruff>=0.4"]
+
+[project.scripts]
+probc = "probc.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["probc*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 120

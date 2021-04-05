@@ -1,0 +1,7 @@
+numpy>=1.22
+scipy>=1.8
+pandas>=1.4
+scikit-learn>=1.1
+matplotlib>=3.5
+pyyaml>=6.0
+# optional readers: cooler (.cool/.mcool), hic-straw (.hic), pyBigWig (bigWig signals)
