@@ -1,4 +1,6 @@
-PROBC: PREDICTING HI-C INTERACTIONS FROM EPIGENETIC AND TRANSCRIPTION MODIFICATIONS
+PROBC: PREDICTING HI-C INTERACTIONS/TADs FROM EPIGENETIC AND TRANSCRIPTION MODIFICATIONS
+
+The code has two parts. First part is to estimate model parameters. Second part is to infer TADs over trained model.
 
 There are two sample files in this directory for training:
 train_order1_width2_preloglinear_nonparam_lambda3800.0_iter100_dommetadata.txt
