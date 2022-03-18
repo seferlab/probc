@@ -8,7 +8,7 @@ train_order1_width2_preloglinear_nonparam_lambda3800.0_iter100_domparams.txt
 
 Proposed method ProbC has two parts:
 
-1- estCRFParamsNonparam.py: estimates the model parameters. It has the following input parameters:
+1- estParams.py: estimates the model parameters. It has the following input parameters:
 
 markerpath: marker files for corresponding domain partitions. It is a
 combination of marker data of different chromosomes. Marker data of
